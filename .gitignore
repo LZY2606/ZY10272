@@ -1,0 +1,56 @@
+# editors
+.idea/
+.vscode/
+
+# python
+*.egg-info/
+*.py[cod]
+.venv/
+.venvs/
+/build/
+/dist/
+
+# tools
+.coverage*
+/.pdm-build/
+/htmlcov/
+/site/
+uv.lock
+
+# cache
+.cache/
+.pytest_cache/
+.ruff_cache/
+__pycache__/
+
+# --- 依赖与构建产物（不进交付快照）---
+node_modules/
+bower_components/
+.pnp.*
+dist/
+build/
+out/
+target/
+.next/
+.nuxt/
+.svelte-kit/
+venv/
+env/
+*.pyc
+.mypy_cache/
+.tox/
+vendor/bundle/
+Pods/
+.gradle/
+.cargo/
+.DS_Store
+.env
+.env.*
+*.log
+coverage/
+.coverage
+.nyc_output/
+.parcel-cache/
+.vite/
+.turbo/
+*.tsbuildinfo

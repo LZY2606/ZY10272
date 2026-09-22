@@ -1,0 +1,123 @@
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
+
+[project]
+name = "markdown-exec"
+description = "Utilities to execute code blocks in Markdown files."
+authors = [{name = "Timothée Mazzucotelli", email = "dev@pawamoy.fr"}]
+license = "ISC"
+license-files = ["LICENSE"]
+readme = "README.md"
+requires-python = ">=3.10"
+keywords = ["markdown", "python", "exec", "shell", "bash", "mkdocs"]
+dynamic = ["version"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Documentation",
+    "Topic :: Software Development",
+    "Topic :: Utilities",
+    "Typing :: Typed",
+]
+dependencies = [
+    "pymdown-extensions>=9",
+]
+
+[project.optional-dependencies]
+ansi = ["pygments-ansi-color>=0.3"]
+
+[project.urls]
+Homepage = "https://pawamoy.github.io/markdown-exec"
+Documentation = "https://pawamoy.github.io/markdown-exec"
+Changelog = "https://pawamoy.github.io/markdown-exec/changelog"
+Repository = "https://github.com/pawamoy/markdown-exec"
+Issues = "https://github.com/pawamoy/markdown-exec/issues"
+Discussions = "https://github.com/pawamoy/markdown-exec/discussions"
+Gitter = "https://gitter.im/markdown-exec/community"
+Funding = "https://github.com/sponsors/pawamoy"
+
+[project.entry-points."mkdocs.plugins"]
+markdown-exec = "markdown_exec:MarkdownExecPlugin"
+
+[tool.pdm.version]
+source = "call"
+getter = "scripts.get_version:get_version"
+
+[tool.pdm.build]
+# Include as much as possible in the source distribution, to help redistributors.
+excludes = ["**/.pytest_cache"]
+source-includes = [
+    "config",
+    "docs",
+    "scripts",
+    "share",
+    "tests",
+    "duties.py",
+    "zensical.toml",
+    "*.md",
+    "LICENSE",
+]
+
+[tool.pdm.build.wheel-data]
+# Manual pages can be included in the wheel.
+# Depending on the installation tool, they will be accessible to users.
+# pipx supports it, uv does not yet, see https://github.com/astral-sh/uv/issues/4731.
+data = [
+    {path = "share/**/*", relative-to = "."},
+]
+
+[dependency-groups]
+maintain = [
+    "git-changelog>=2.5",
+    "twine>=5.1",
+    "yore>=0.3.3",
+]
+ci = [
+    "duty>=1.6",
+    "griffe>=2.0",
+    "pytest>=8.2",
+    "pytest-cov>=5.0",
+    "pytest-randomly>=3.15",
+    "pytest-xdist>=3.6",
+    "ruff>=0.4",
+    "ty>=0.0.14",
+    "types-markdown>=3.6",
+    "types-pyyaml>=6.0",
+]
+ docs = [
+    "ghp-import>=2.1",
+    "markdown-callouts>=0.4",
+    "mkdocstrings[python]>=0.29",
+    # YORE: EOL 3.10: Remove line.
+    "tomli>=2.0; python_version < '3.11'",
+    "zensical>=0.0.21",
+
+    # docs gallery
+    "pydeps>=3.0; python_version == '3.12'",
+    "diagrams>=0.24.1; python_version == '3.12'",
+    "rich>=13.9; python_version == '3.12'",
+    "matplotlib>=3.9; python_version == '3.12'",
+    "numpy>=2.1; python_version == '3.12'",
+    "textual>=1.0; python_version == '3.12'",
+    "pipdeptree>=2.25; python_version == '3.12'",
+    "pip>=25; python_version == '3.12'",
+    "pygments>=2.19; python_version == '3.12'",
+    "drawsvg>=2.4; python_version == '3.12'",
+    "hyperbolic>=2.0; python_version == '3.12'",
+    "qrcode>=8.0; python_version == '3.12'",
+    "plotly>=6.0; python_version == '3.12'",
+    "pandas>=2.2; python_version == '3.12'",
+    "chalk-diagrams>=0.2.2; python_version == '3.12'",
+]
+
+[tool.uv]
+default-groups = ["maintain", "ci", "docs"]

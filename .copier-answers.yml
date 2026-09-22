@@ -1,0 +1,19 @@
+# Changes here will be overwritten by Copier.
+_commit: 1.12.1
+_src_path: gh:pawamoy/copier-uv
+author_email: dev@pawamoy.fr
+author_fullname: Timothée Mazzucotelli
+author_username: pawamoy
+copyright_date: '2022'
+copyright_holder: Timothée Mazzucotelli
+copyright_holder_email: dev@pawamoy.fr
+copyright_license: ISC
+project_description: Utilities to execute code blocks in Markdown files.
+project_name: Markdown Exec
+python_package_command_line_name: ''
+python_package_distribution_name: markdown-exec
+python_package_import_name: markdown_exec
+repository_name: markdown-exec
+repository_namespace: pawamoy
+repository_provider: github.com
+
