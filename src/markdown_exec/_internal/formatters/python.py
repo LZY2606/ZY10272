@@ -12,12 +12,19 @@ from types import ModuleType
 from typing import Any
 
 from markdown_exec._internal.formatters._exec_python import exec_python
-from markdown_exec._internal.formatters.base import ExecutionError, base_format
+from markdown_exec._internal.formatters.base import ExecutionError, ExecutionTimeout, _time_limit, base_format
 from markdown_exec._internal.rendering import code_block
 
 _sessions_globals: dict[str, dict] = defaultdict(dict)
 _sessions_counter: dict[str | None, int] = defaultdict(int)
 _code_blocks: dict[str, list[str]] = {}
+
+
+def _reset_python_state() -> None:
+    """Reset the state shared between executed Python code blocks."""
+    _sessions_globals.clear()
+    _sessions_counter.clear()
+    _code_blocks.clear()
 
 
 def _buffer_print(buffer: StringIO, *texts: str, end: str = "\n", **kwargs: Any) -> None:  # noqa: ARG001
@@ -48,6 +55,7 @@ def _run_python(
     returncode: int | None = None,  # noqa: ARG001
     session: str | None = None,
     id: str | None = None,  # noqa: A002
+    timeout: float | None = None,
     **extra: str,
 ) -> str:
     title = extra.get("title")
@@ -68,7 +76,10 @@ def _run_python(
     exec_globals["print"] = partial(_buffer_print, buffer)
 
     try:
-        exec_python(code, code_block_id, exec_globals)
+        with _time_limit(timeout):
+            exec_python(code, code_block_id, exec_globals)
+    except ExecutionTimeout:
+        raise
     except Exception as error:
         trace = traceback.TracebackException.from_exception(error)
         for frame in trace.stack:

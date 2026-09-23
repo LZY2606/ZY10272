@@ -13,8 +13,10 @@ from mkdocs.exceptions import PluginError
 from mkdocs.plugins import BasePlugin
 from mkdocs.utils import write_file
 
+from markdown_exec._internal.formatters.python import _reset_python_state
 from markdown_exec._internal.logger import patch_loggers
 from markdown_exec._internal.main import formatter, formatters, validator
+from markdown_exec._internal.manifest import manifest_recorder
 from markdown_exec._internal.rendering import MarkdownConverter, markdown_config
 
 if TYPE_CHECKING:
@@ -23,6 +25,7 @@ if TYPE_CHECKING:
     from jinja2 import Environment
     from mkdocs.config.defaults import MkDocsConfig
     from mkdocs.structure.files import Files
+    from mkdocs.structure.pages import Page
 
 try:
     __import__("pygments_ansi_color")
@@ -59,6 +62,10 @@ class MarkdownExecPluginConfig(Config):
         default=list(formatters.keys()),
     )
     """Which languages to enabled the extension for."""
+    manifest = config_options.Optional(config_options.Type(str))
+    """Path to an execution manifest file to write (relative to the site directory)."""
+    manifest_env = config_options.ListOfItems(config_options.Type(str), default=[])
+    """Names of environment variables that are safe to record in the manifest."""
 
 
 class MarkdownExecPlugin(BasePlugin[MarkdownExecPluginConfig]):
@@ -104,7 +111,23 @@ class MarkdownExecPlugin(BasePlugin[MarkdownExecPluginConfig]):
                 },
             )
         markdown_config.save(config.markdown_extensions, config.mdx_configs)
+        if self.config.manifest:
+            manifest_recorder.configure(self.config.manifest, env_whitelist=self.config.manifest_env)
+        _reset_python_state()
+        MarkdownConverter.counter = 0
         return config
+
+    def on_page_markdown(
+        self,
+        markdown: str,
+        *,
+        page: Page,
+        config: MkDocsConfig,  # noqa: ARG002
+        files: Files,  # noqa: ARG002
+    ) -> str | None:
+        """Record which document is being rendered."""
+        manifest_recorder.set_document(page.file.src_path)
+        return markdown
 
     def on_env(
         self,
@@ -121,14 +144,26 @@ class MarkdownExecPlugin(BasePlugin[MarkdownExecPluginConfig]):
             self._add_js(config, "pyodide.js")
         return env
 
-    def on_post_build(self, *, config: MkDocsConfig) -> None:  # noqa: ARG002
+    def on_post_build(self, *, config: MkDocsConfig) -> None:
         """Reset the plugin state."""
-        MarkdownConverter.counter = 0
-        markdown_config.reset()
-        if self.mkdocs_config_dir is None:
-            os.environ.pop("MKDOCS_CONFIG_DIR", None)
-        else:
-            os.environ["MKDOCS_CONFIG_DIR"] = self.mkdocs_config_dir
+        try:
+            if manifest_recorder.enabled:
+                manifest_path = self.config.manifest
+                if not Path(manifest_path).is_absolute():
+                    manifest_path = os.path.join(config.site_dir, manifest_path)  # noqa: PTH118
+                manifest_recorder.write(manifest_path)
+        finally:
+            manifest_recorder.reset()
+            MarkdownConverter.counter = 0
+            markdown_config.reset()
+            if self.mkdocs_config_dir is None:
+                os.environ.pop("MKDOCS_CONFIG_DIR", None)
+            else:
+                os.environ["MKDOCS_CONFIG_DIR"] = self.mkdocs_config_dir
+
+    def on_build_error(self, *, error: Exception) -> None:  # noqa: ARG002
+        """Reset the manifest recorder without publishing anything."""
+        manifest_recorder.reset()
 
     def _add_asset(self, config: MkDocsConfig, asset_file: str, asset_type: str) -> None:
         asset_filename = f"assets/_markdown_exec_{asset_file}"

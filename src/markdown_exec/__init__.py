@@ -5,6 +5,7 @@ Utilities to execute code blocks in Markdown files.
 
 from markdown_exec._internal.formatters.base import (
     ExecutionError,
+    ExecutionTimeout,
     base_format,
     console_width,
     default_tabs,
@@ -12,6 +13,7 @@ from markdown_exec._internal.formatters.base import (
 )
 from markdown_exec._internal.logger import get_logger, patch_loggers
 from markdown_exec._internal.main import MARKDOWN_EXEC_AUTO, formatter, formatters, validator
+from markdown_exec._internal.manifest import MANIFEST_VERSION, ExecutionManifest, ManifestError, manifest_recorder
 from markdown_exec._internal.processors import (
     HeadingReportingTreeprocessor,
     IdPrependingTreeprocessor,
@@ -28,11 +30,15 @@ from markdown_exec._internal.rendering import (
 )
 
 __all__ = [
+    "MANIFEST_VERSION",
     "MARKDOWN_EXEC_AUTO",
     "ExecutionError",
+    "ExecutionManifest",
+    "ExecutionTimeout",
     "HeadingReportingTreeprocessor",
     "IdPrependingTreeprocessor",
     "InsertHeadings",
+    "ManifestError",
     "MarkdownConfig",
     "MarkdownConverter",
     "RemoveHeadings",
@@ -44,6 +50,7 @@ __all__ = [
     "formatter",
     "formatters",
     "get_logger",
+    "manifest_recorder",
     "markdown_config",
     "patch_loggers",
     "tabbed",

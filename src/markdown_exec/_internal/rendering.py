@@ -11,6 +11,7 @@ from warnings import warn
 from markdown import Markdown
 from markupsafe import Markup
 
+from markdown_exec._internal.manifest import manifest_recorder
 from markdown_exec._internal.processors import (
     HeadingReportingTreeprocessor,
     IdPrependingTreeprocessor,
@@ -269,7 +270,9 @@ class MarkdownConverter:
         md = _mimic(self._original_md, self._headings, update_toc=self._update_toc)
 
         # convert markdown to html
-        with _id_prefix(md, id_prefix):
+        # (recording is paused so that fences in generated Markdown
+        # are not mistaken for source blocks)
+        with _id_prefix(md, id_prefix), manifest_recorder.pause():
             converted = md.convert(text)
 
         # restore html from stash

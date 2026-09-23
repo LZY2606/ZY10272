@@ -14,6 +14,7 @@ from markdown_exec._internal.formatters.python import _format_python
 from markdown_exec._internal.formatters.sh import _format_sh
 from markdown_exec._internal.formatters.tree import _format_tree
 from markdown_exec._internal.logger import get_logger
+from markdown_exec._internal.manifest import manifest_recorder
 
 if TYPE_CHECKING:
     from markdown import Markdown
@@ -63,6 +64,7 @@ def validator(
     """
     exec_value = language in MARKDOWN_EXEC_AUTO or _to_bool(inputs.pop("exec", "no"))
     if language not in {"tree", "pyodide"} and not exec_value:
+        manifest_recorder.record_skipped(language=language, options=inputs)
         return False
     id_value = inputs.pop("id", "")
     id_prefix_value = inputs.pop("idprefix", None)
@@ -76,6 +78,7 @@ def validator(
     tabs = tuple(_tabs_re.split(tabs_value, maxsplit=1))
     workdir_value = inputs.pop("workdir", None)
     width_value = int(inputs.pop("width", "0"))
+    timeout_value = float(inputs.pop("timeout", "0") or 0)
     options["id"] = id_value
     options["id_prefix"] = id_prefix_value
     options["html"] = html_value
@@ -87,6 +90,7 @@ def validator(
     options["tabs"] = tabs
     options["workdir"] = workdir_value
     options["width"] = width_value
+    options["timeout"] = timeout_value or None
     options["extra"] = inputs
     return True
 

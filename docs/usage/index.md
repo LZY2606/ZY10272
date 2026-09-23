@@ -36,6 +36,8 @@ linking to their related documentation:
 - [`session`](#sessions): Execute code blocks within a named session, reusing previously defined variables, etc..
 - [`source`](#render-the-source-code-as-well): Render the source as well as the output.
 - [`tabs`](#change-the-titles-of-tabs): When rendering the source using tabs, choose the tabs titles.
+- [`cache`](#execution-manifest): Reuse the output of an identical block executed earlier in the same build.
+- [`timeout`](#execution-manifest): Limit the execution time of a code block (seconds).
 - [`width`](#change-the-console-width): Change the console width through the `COLUMNS` environment variable.
 - [`workdir`](#change-the-working-directory): Change the working directory.
 - [`title`](#additional-options): Title is a [Material for MkDocs][material] / [Zensical] option.
@@ -480,6 +482,55 @@ to build the documentation from a different directory than the repository root.
 
 The environment variable will be restored to its previous value, if any,
 at the end of the build.
+
+## Execution manifest
+
+When using the MkDocs plugin, you can record an *execution manifest*:
+a JSON file describing every code block that was executed (or skipped)
+during the build. Enable it with the `manifest` plugin option:
+
+```yaml
+# mkdocs.yml
+plugins:
+- markdown-exec:
+    manifest: execution-manifest.json
+    manifest_env:
+    - MARKDOWN_EXEC_TEST_ENV
+```
+
+The path is relative to the site directory.
+For each code block, the manifest records:
+
+- the document path, relative to the docs directory;
+- a stable block identifier (the explicit `id` option if provided,
+    otherwise a content-based identifier that survives reordering
+    of unrelated paragraphs);
+- a SHA-256 digest and a truncated preview of the source code;
+- the language and the parsed options;
+- the runner (Markdown Exec and Python versions);
+- the whitelisted environment variables (`manifest_env` option)
+    and their values — nothing else is ever recorded, so secrets
+    never leak into the manifest;
+- the working directory (`workdir` option);
+- the session name, the execution sequence number within the session,
+    and the identifier of the previous block in the session (parent state);
+- the exit status: `ok`, `error`, `timeout`, `render_error`,
+    `skipped` or `cached`;
+- the return code, and SHA-256 digests, sizes and truncated previews
+    of the captured output and of the generated Markdown.
+
+Two block options are useful in combination with the manifest:
+
+- `timeout="SECONDS"` aborts the execution after the given time
+    (the block is recorded with the `timeout` status);
+- `cache="yes"` reuses the output of an identical block executed earlier
+    in the same build (the block is recorded with the `cached` status).
+
+Two identical builds produce a byte-identical manifest.
+The manifest is written to a temporary file first and then moved
+into place, so a failed build never publishes a partial manifest.
+If two blocks of a same document share an explicit `id`,
+the build fails with an error when the manifest is finalized.
 
 [material]: https://squidfunk.github.io/mkdocs-material/
 [Zensical]: https://zensical.org/
